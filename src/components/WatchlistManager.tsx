@@ -73,6 +73,24 @@ export default function WatchlistManager({
         }
     }, []);
 
+    // Listen for storage changes (from useWatchlistManager hook)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    setState(parsed);
+                } catch (e) {
+                    console.error('Failed to parse watchlist:', e);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     // Save state to localStorage
     useEffect(() => {
         localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(state));
