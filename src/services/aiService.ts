@@ -12,7 +12,8 @@ export async function analyzeStock(
     history: HistoricalDataPoint[]
 ): Promise<AIInsight> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        // Using gemini-2.0-flash which is the current available model
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const prompt = `You are a financial analyst AI. Analyze the following Indian stock data and provide a structured analysis.
 
