@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import type { MarketIndex } from '@/types/stock';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
     const [indices, setIndices] = useState<MarketIndex[]>([]);
@@ -36,6 +37,10 @@ export default function Header() {
                     </div>
                     <h1>Artha <span className="text-ai">AI</span></h1>
                     <span className="badge">India</span>
+                </div>
+
+                <div className="header-actions">
+                    <ThemeToggle />
                 </div>
 
                 <div className="indices">

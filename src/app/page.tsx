@@ -1,46 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
 import StockInfo from '@/components/StockInfo';
 import AIInsights from '@/components/AIInsights';
-import Watchlist from '@/components/Watchlist';
-import type { WatchlistItem } from '@/types/stock';
-
-const WATCHLIST_KEY = 'artha-watchlist';
+import WatchlistManager from '@/components/WatchlistManager';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-
-  // Load watchlist from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(WATCHLIST_KEY);
-    if (saved) {
-      try {
-        setWatchlist(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse watchlist:', e);
-      }
-    }
-  }, []);
-
-  // Save watchlist to localStorage
-  useEffect(() => {
-    localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist));
-  }, [watchlist]);
-
-  const handleAddToWatchlist = (item: WatchlistItem) => {
-    if (!watchlist.some(w => w.symbol === item.symbol)) {
-      setWatchlist([...watchlist, item]);
-    }
-  };
-
-  const handleRemoveFromWatchlist = (symbol: string) => {
-    setWatchlist(watchlist.filter(w => w.symbol !== symbol));
-  };
 
   return (
     <div className="app">
@@ -52,11 +21,7 @@ export default function Home() {
             <SearchBar onSelectStock={setSelectedSymbol} />
 
             <div className="chart-section">
-              <StockInfo
-                symbol={selectedSymbol}
-                watchlist={watchlist}
-                onAddToWatchlist={handleAddToWatchlist}
-              />
+              <StockInfo symbol={selectedSymbol} />
               <StockChart symbol={selectedSymbol} />
             </div>
 
@@ -64,11 +29,9 @@ export default function Home() {
           </div>
 
           <div className="right-panel">
-            <Watchlist
-              items={watchlist}
+            <WatchlistManager
               selectedSymbol={selectedSymbol}
               onSelectStock={setSelectedSymbol}
-              onRemoveStock={handleRemoveFromWatchlist}
             />
           </div>
         </div>
@@ -83,3 +46,4 @@ export default function Home() {
     </div>
   );
 }
+

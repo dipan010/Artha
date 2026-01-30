@@ -1,21 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, TrendingDown, RefreshCw, Plus, Check } from 'lucide-react';
-import type { StockQuote, WatchlistItem } from '@/types/stock';
+import type { StockQuote } from '@/types/stock';
+import { useWatchlistManager } from './WatchlistManager';
 
 interface StockInfoProps {
     symbol: string | null;
-    watchlist: WatchlistItem[];
-    onAddToWatchlist: (item: WatchlistItem) => void;
 }
 
-export default function StockInfo({ symbol, watchlist, onAddToWatchlist }: StockInfoProps) {
+export default function StockInfo({ symbol }: StockInfoProps) {
     const [quote, setQuote] = useState<StockQuote | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [inWatchlist, setInWatchlist] = useState(false);
+    const { addToWatchlist, isInWatchlist } = useWatchlistManager();
 
-    const isInWatchlist = watchlist.some((item) => item.symbol === symbol);
+    // Check if in watchlist
+    useEffect(() => {
+        if (symbol) {
+            setInWatchlist(isInWatchlist(symbol));
+        }
+    }, [symbol, isInWatchlist]);
+
+    // Listen for storage changes (when watchlist updates)
+    useEffect(() => {
+        const handleStorage = () => {
+            if (symbol) {
+                setInWatchlist(isInWatchlist(symbol));
+            }
+        };
+
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, [symbol, isInWatchlist]);
 
     useEffect(() => {
         if (!symbol) {
@@ -46,12 +64,11 @@ export default function StockInfo({ symbol, watchlist, onAddToWatchlist }: Stock
     }, [symbol]);
 
     const handleAddToWatchlist = () => {
-        if (quote && !isInWatchlist) {
-            onAddToWatchlist({
-                symbol: quote.symbol,
-                name: quote.name,
-                addedAt: new Date().toISOString(),
-            });
+        if (quote && !inWatchlist) {
+            const added = addToWatchlist(quote.symbol, quote.name);
+            if (added) {
+                setInWatchlist(true);
+            }
         }
     };
 
@@ -90,12 +107,12 @@ export default function StockInfo({ symbol, watchlist, onAddToWatchlist }: Stock
                 </div>
 
                 <button
-                    className={`watchlist-btn ${isInWatchlist ? 'added' : ''}`}
+                    className={`watchlist-btn ${inWatchlist ? 'added' : ''}`}
                     onClick={handleAddToWatchlist}
-                    disabled={isInWatchlist}
+                    disabled={inWatchlist}
                 >
-                    {isInWatchlist ? <Check size={16} /> : <Plus size={16} />}
-                    {isInWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                    {inWatchlist ? <Check size={16} /> : <Plus size={16} />}
+                    {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                 </button>
             </div>
 
