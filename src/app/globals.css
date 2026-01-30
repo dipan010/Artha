@@ -2649,3 +2649,314 @@ body {
 .sector-stock-item .stock-change.negative {
   color: var(--red);
 }
+
+/* ===== DIVIDEND TRACKER ===== */
+.dividend-tracker {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+
+.dividend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dividend-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dividend-title h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dividend-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.view-tabs {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.view-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.view-tab:hover {
+  color: var(--text-primary);
+}
+
+.view-tab.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.dividend-loading,
+.dividend-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.dividend-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-value.highlight {
+  color: var(--green);
+}
+
+.dividend-table-container {
+  overflow-x: auto;
+}
+
+.dividend-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dividend-table th,
+.dividend-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dividend-table th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+}
+
+.dividend-table th:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+
+.dividend-table th:last-child {
+  border-top-right-radius: var(--radius-md);
+}
+
+.dividend-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dividend-table th.sortable:hover {
+  color: var(--text-primary);
+}
+
+.dividend-table th svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.dividend-table tr.clickable {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.dividend-table tr.clickable:hover {
+  background: var(--bg-tertiary);
+}
+
+.stock-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.stock-cell .symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.stock-cell .name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.yield-value {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.yield-value.high {
+  color: var(--green);
+}
+
+.dividend-calendar {
+  padding: 0.5rem 0;
+}
+
+.calendar-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+}
+
+.calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.calendar-item:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
+}
+
+.calendar-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+  padding: 0.5rem;
+  background: var(--accent-primary);
+  border-radius: var(--radius-sm);
+  color: white;
+}
+
+.calendar-date .day {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.calendar-date .month {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+}
+
+.calendar-stock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.calendar-stock .symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendar-stock .name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.calendar-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.calendar-info .yield {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.calendar-info .days-until {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.calendar-info .days-until.soon {
+  color: var(--yellow);
+  font-weight: 500;
+}
+
+.no-upcoming {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dividend-note {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.dividend-note p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}

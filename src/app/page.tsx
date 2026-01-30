@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, ArrowLeftRight, Grid3X3 } from 'lucide-react';
+import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign } from 'lucide-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
@@ -10,8 +10,9 @@ import AIInsights from '@/components/AIInsights';
 import WatchlistManager from '@/components/WatchlistManager';
 import ComparisonTool from '@/components/ComparisonTool';
 import SectorHeatmap from '@/components/SectorHeatmap';
+import DividendTracker from '@/components/DividendTracker';
 
-type ViewMode = 'single' | 'compare' | 'sectors';
+type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export default function Home() {
                 onClick={() => setViewMode('single')}
               >
                 <BarChart3 size={18} />
-                Single Stock
+                Stock
               </button>
               <button
                 className={`view-toggle-btn ${viewMode === 'compare' ? 'active' : ''}`}
@@ -51,6 +52,13 @@ export default function Home() {
               >
                 <Grid3X3 size={18} />
                 Sectors
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'dividends' ? 'active' : ''}`}
+                onClick={() => setViewMode('dividends')}
+              >
+                <DollarSign size={18} />
+                Dividends
               </button>
             </div>
 
@@ -71,6 +79,10 @@ export default function Home() {
 
             {viewMode === 'sectors' && (
               <SectorHeatmap onSelectStock={handleStockSelect} />
+            )}
+
+            {viewMode === 'dividends' && (
+              <DividendTracker onSelectStock={handleStockSelect} />
             )}
           </div>
 
