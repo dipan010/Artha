@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar } from 'lucide-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
@@ -11,16 +11,48 @@ import WatchlistManager from '@/components/WatchlistManager';
 import ComparisonTool from '@/components/ComparisonTool';
 import SectorHeatmap from '@/components/SectorHeatmap';
 import DividendTracker from '@/components/DividendTracker';
+import MarketCalendar from '@/components/MarketCalendar';
+import AIChatAssistant from '@/components/AIChatAssistant';
 
-type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends';
+type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('single');
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+
+  // Load watchlist from localStorage for chat context
+  useEffect(() => {
+    const loadWatchlist = () => {
+      try {
+        const stored = localStorage.getItem('artha_watchlist');
+        if (stored) {
+          const items = JSON.parse(stored);
+          setWatchlist(items.map((item: { symbol: string }) => item.symbol));
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
+    };
+    loadWatchlist();
+
+    // Listen for storage changes
+    window.addEventListener('storage', loadWatchlist);
+    return () => window.removeEventListener('storage', loadWatchlist);
+  }, []);
 
   const handleStockSelect = (symbol: string) => {
     setSelectedSymbol(symbol);
     setViewMode('single');
+  };
+
+  // Chat context based on current state
+  const chatContext = {
+    currentStock: selectedSymbol ? {
+      symbol: selectedSymbol,
+      name: selectedSymbol.replace('.NS', '').replace('.BO', ''),
+    } : undefined,
+    watchlist: watchlist.length > 0 ? watchlist : undefined,
   };
 
   return (
@@ -36,29 +68,36 @@ export default function Home() {
                 className={`view-toggle-btn ${viewMode === 'single' ? 'active' : ''}`}
                 onClick={() => setViewMode('single')}
               >
-                <BarChart3 size={18} />
+                <BarChart3 size={16} />
                 Stock
               </button>
               <button
                 className={`view-toggle-btn ${viewMode === 'compare' ? 'active' : ''}`}
                 onClick={() => setViewMode('compare')}
               >
-                <ArrowLeftRight size={18} />
+                <ArrowLeftRight size={16} />
                 Compare
               </button>
               <button
                 className={`view-toggle-btn ${viewMode === 'sectors' ? 'active' : ''}`}
                 onClick={() => setViewMode('sectors')}
               >
-                <Grid3X3 size={18} />
+                <Grid3X3 size={16} />
                 Sectors
               </button>
               <button
                 className={`view-toggle-btn ${viewMode === 'dividends' ? 'active' : ''}`}
                 onClick={() => setViewMode('dividends')}
               >
-                <DollarSign size={18} />
+                <DollarSign size={16} />
                 Dividends
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+              >
+                <Calendar size={16} />
+                Calendar
               </button>
             </div>
 
@@ -84,6 +123,10 @@ export default function Home() {
             {viewMode === 'dividends' && (
               <DividendTracker onSelectStock={handleStockSelect} />
             )}
+
+            {viewMode === 'calendar' && (
+              <MarketCalendar onSelectStock={handleStockSelect} />
+            )}
           </div>
 
           <div className="right-panel">
@@ -101,6 +144,9 @@ export default function Home() {
           This application is for informational purposes only. Not financial advice.
         </p>
       </footer>
+
+      {/* AI Chat Assistant - Floating Widget */}
+      <AIChatAssistant context={chatContext} />
     </div>
   );
 }
