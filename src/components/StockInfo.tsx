@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { TrendingUp, TrendingDown, RefreshCw, Plus, Check } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, Plus, Check, Share2 } from 'lucide-react';
 import type { StockQuote } from '@/types/stock';
 import { useWatchlistManager } from './WatchlistManager';
+import ShareModal from './ShareModal';
 
 interface StockInfoProps {
     symbol: string | null;
@@ -14,6 +15,7 @@ export default function StockInfo({ symbol }: StockInfoProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [inWatchlist, setInWatchlist] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
     const { addToWatchlist, isInWatchlist } = useWatchlistManager();
 
     // Check if in watchlist
@@ -114,6 +116,13 @@ export default function StockInfo({ symbol }: StockInfoProps) {
                     {inWatchlist ? <Check size={16} /> : <Plus size={16} />}
                     {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                 </button>
+                <button
+                    className="share-button"
+                    onClick={() => setShowShareModal(true)}
+                    title="Share"
+                >
+                    <Share2 size={18} />
+                </button>
             </div>
 
             <div className="price-section">
@@ -167,6 +176,19 @@ export default function StockInfo({ symbol }: StockInfoProps) {
                     </span>
                 </div>
             </div>
+
+            {/* Share Modal */}
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                stockData={{
+                    symbol: quote.symbol,
+                    name: quote.name,
+                    price: quote.price,
+                    change: quote.change,
+                    changePercent: quote.changePercent,
+                }}
+            />
         </div>
     );
 }

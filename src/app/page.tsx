@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar } from 'lucide-react';
+import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar, Bell, Newspaper } from 'lucide-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
@@ -13,8 +13,10 @@ import SectorHeatmap from '@/components/SectorHeatmap';
 import DividendTracker from '@/components/DividendTracker';
 import MarketCalendar from '@/components/MarketCalendar';
 import AIChatAssistant from '@/components/AIChatAssistant';
+import PriceAlerts from '@/components/PriceAlerts';
+import NewsPanel from '@/components/NewsPanel';
 
-type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar';
+type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar' | 'alerts' | 'news';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -99,6 +101,20 @@ export default function Home() {
                 <Calendar size={16} />
                 Calendar
               </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'alerts' ? 'active' : ''}`}
+                onClick={() => setViewMode('alerts')}
+              >
+                <Bell size={16} />
+                Alerts
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'news' ? 'active' : ''}`}
+                onClick={() => setViewMode('news')}
+              >
+                <Newspaper size={16} />
+                News
+              </button>
             </div>
 
             {viewMode === 'single' && (
@@ -126,6 +142,17 @@ export default function Home() {
 
             {viewMode === 'calendar' && (
               <MarketCalendar onSelectStock={handleStockSelect} />
+            )}
+
+            {viewMode === 'alerts' && (
+              <PriceAlerts
+                selectedSymbol={selectedSymbol}
+                onSelectStock={handleStockSelect}
+              />
+            )}
+
+            {viewMode === 'news' && (
+              <NewsPanel selectedSymbol={selectedSymbol} />
             )}
           </div>
 
