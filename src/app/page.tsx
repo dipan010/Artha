@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar, Bell, Newspaper } from 'lucide-react';
+import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar, Bell, Newspaper, Wallet } from 'lucide-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
@@ -15,8 +15,9 @@ import MarketCalendar from '@/components/MarketCalendar';
 import AIChatAssistant from '@/components/AIChatAssistant';
 import PriceAlerts from '@/components/PriceAlerts';
 import NewsPanel from '@/components/NewsPanel';
+import MutualFundsExplorer from '@/components/MutualFundsExplorer';
 
-type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar' | 'alerts' | 'news';
+type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar' | 'alerts' | 'news' | 'funds';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -115,6 +116,13 @@ export default function Home() {
                 <Newspaper size={16} />
                 News
               </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'funds' ? 'active' : ''}`}
+                onClick={() => setViewMode('funds')}
+              >
+                <Wallet size={16} />
+                Funds
+              </button>
             </div>
 
             {viewMode === 'single' && (
@@ -153,6 +161,10 @@ export default function Home() {
 
             {viewMode === 'news' && (
               <NewsPanel selectedSymbol={selectedSymbol} />
+            )}
+
+            {viewMode === 'funds' && (
+              <MutualFundsExplorer />
             )}
           </div>
 
