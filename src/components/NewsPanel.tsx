@@ -1,13 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Newspaper, RefreshCw, ExternalLink, TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Newspaper, RefreshCw, ExternalLink, TrendingUp, TrendingDown, Minus, Sparkles, Loader2, Zap, Clock, ToggleLeft, ToggleRight } from 'lucide-react';
 import type { NewsArticle, NewsSentiment } from '@/types/news';
 import { NEWS_CATEGORIES, SENTIMENT_COLORS } from '@/types/news';
 
 interface NewsPanelProps {
     selectedSymbol?: string | null;
 }
+
+const AUTO_REFRESH_INTERVALS = [
+    { value: 0, label: 'Off' },
+    { value: 60, label: '1 min' },
+    { value: 300, label: '5 min' },
+    { value: 600, label: '10 min' },
+];
 
 export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
     const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -16,9 +23,15 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [analyzingId, setAnalyzingId] = useState<string | null>(null);
     const [sentiments, setSentiments] = useState<Record<string, NewsSentiment>>({});
+    const [autoRefresh, setAutoRefresh] = useState(300); // 5 min default
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [isLive, setIsLive] = useState(true);
+    const [newArticlesCount, setNewArticlesCount] = useState(0);
+    const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const previousArticlesRef = useRef<string[]>([]);
 
-    const fetchNews = async () => {
-        setLoading(true);
+    const fetchNews = useCallback(async (showLoading = true, isAutoRefresh = false) => {
+        if (showLoading) setLoading(true);
         setError(null);
 
         try {
@@ -29,22 +42,66 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
             if (selectedSymbol) {
                 params.set('symbol', selectedSymbol);
             }
+            if (isAutoRefresh) {
+                params.set('refresh', 'true');
+            }
 
             const response = await fetch(`/api/news?${params}`);
             if (!response.ok) throw new Error('Failed to fetch news');
 
             const data = await response.json();
+
+            // Check for new articles
+            const newIds = data.articles.map((a: NewsArticle) => a.id);
+            const previousIds = previousArticlesRef.current;
+
+            if (isAutoRefresh && previousIds.length > 0) {
+                const newCount = newIds.filter((id: string) => !previousIds.includes(id)).length;
+                if (newCount > 0) {
+                    setNewArticlesCount(prev => prev + newCount);
+                }
+            }
+
+            previousArticlesRef.current = newIds;
             setArticles(data.articles);
+            setLastUpdated(new Date(data.lastUpdated));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load news');
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedCategory, selectedSymbol]);
 
+    // Initial fetch
     useEffect(() => {
         fetchNews();
-    }, [selectedCategory, selectedSymbol]);
+        previousArticlesRef.current = [];
+        setNewArticlesCount(0);
+    }, [selectedCategory, selectedSymbol, fetchNews]);
+
+    // Auto-refresh timer
+    useEffect(() => {
+        if (refreshTimerRef.current) {
+            clearInterval(refreshTimerRef.current);
+        }
+
+        if (autoRefresh > 0 && isLive) {
+            refreshTimerRef.current = setInterval(() => {
+                fetchNews(false, true);
+            }, autoRefresh * 1000);
+        }
+
+        return () => {
+            if (refreshTimerRef.current) {
+                clearInterval(refreshTimerRef.current);
+            }
+        };
+    }, [autoRefresh, isLive, fetchNews]);
+
+    const handleManualRefresh = () => {
+        setNewArticlesCount(0);
+        fetchNews(true, true);
+    };
 
     const analyzeArticle = async (article: NewsArticle) => {
         setAnalyzingId(article.id);
@@ -132,6 +189,12 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
         }
     };
 
+    const isBreakingNews = (date: Date) => {
+        const now = new Date();
+        const diff = now.getTime() - new Date(date).getTime();
+        return diff < 30 * 60 * 1000; // Less than 30 minutes
+    };
+
     const getSentimentIcon = (label: NewsSentiment['label']) => {
         switch (label) {
             case 'very_positive':
@@ -152,10 +215,56 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
                 <div className="news-title">
                     <Newspaper size={20} />
                     <h2>Market News</h2>
+                    {isLive && autoRefresh > 0 && (
+                        <span className="live-indicator">
+                            <span className="live-dot"></span>
+                            LIVE
+                        </span>
+                    )}
                 </div>
-                <button className="news-refresh" onClick={fetchNews} disabled={loading}>
-                    <RefreshCw size={16} className={loading ? 'spin' : ''} />
-                </button>
+                <div className="news-actions">
+                    {newArticlesCount > 0 && (
+                        <button className="new-articles-badge" onClick={handleManualRefresh}>
+                            <Zap size={14} />
+                            {newArticlesCount} new
+                        </button>
+                    )}
+                    <button className="news-refresh" onClick={handleManualRefresh} disabled={loading}>
+                        <RefreshCw size={16} className={loading ? 'spin' : ''} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Auto-refresh Controls */}
+            <div className="news-controls">
+                <div className="auto-refresh-toggle">
+                    <button
+                        className={`live-toggle ${isLive ? 'active' : ''}`}
+                        onClick={() => setIsLive(!isLive)}
+                    >
+                        {isLive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                        Auto-refresh
+                    </button>
+                    {isLive && (
+                        <div className="refresh-intervals">
+                            {AUTO_REFRESH_INTERVALS.map(interval => (
+                                <button
+                                    key={interval.value}
+                                    className={`interval-btn ${autoRefresh === interval.value ? 'active' : ''}`}
+                                    onClick={() => setAutoRefresh(interval.value)}
+                                >
+                                    {interval.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                {lastUpdated && (
+                    <div className="last-updated">
+                        <Clock size={12} />
+                        Updated {formatTimeAgo(lastUpdated)}
+                    </div>
+                )}
             </div>
 
             {/* Category Filter */}
@@ -188,7 +297,7 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
                 ) : error ? (
                     <div className="news-error">
                         <p>{error}</p>
-                        <button onClick={fetchNews}>Try Again</button>
+                        <button onClick={() => fetchNews()}>Try Again</button>
                     </div>
                 ) : articles.length === 0 ? (
                     <div className="news-empty">
@@ -197,9 +306,17 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
                     </div>
                 ) : (
                     articles.map(article => (
-                        <div key={article.id} className="news-card">
+                        <div key={article.id} className={`news-card ${isBreakingNews(article.publishedAt) ? 'breaking' : ''}`}>
                             <div className="news-card-header">
-                                <span className="news-source">{article.source}</span>
+                                <div className="news-meta">
+                                    {isBreakingNews(article.publishedAt) && (
+                                        <span className="breaking-badge">
+                                            <Zap size={10} />
+                                            BREAKING
+                                        </span>
+                                    )}
+                                    <span className="news-source">{article.source}</span>
+                                </div>
                                 <span className="news-time">{formatTimeAgo(article.publishedAt)}</span>
                             </div>
 

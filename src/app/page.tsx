@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar, Bell, Newspaper, Wallet } from 'lucide-react';
+import {
+  BarChart3, ArrowLeftRight, Grid3X3, DollarSign, Calendar, Bell,
+  Newspaper, Wallet, Briefcase, Calculator, Scale, Settings
+} from 'lucide-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StockChart from '@/components/StockChart';
@@ -16,8 +19,24 @@ import AIChatAssistant from '@/components/AIChatAssistant';
 import PriceAlerts from '@/components/PriceAlerts';
 import NewsPanel from '@/components/NewsPanel';
 import MutualFundsExplorer from '@/components/MutualFundsExplorer';
+import PortfolioTracker from '@/components/PortfolioTracker';
+import SIPCalculator from '@/components/SIPCalculator';
+import FundComparison from '@/components/FundComparison';
+import NotificationSettings from '@/components/NotificationSettings';
 
-type ViewMode = 'single' | 'compare' | 'sectors' | 'dividends' | 'calendar' | 'alerts' | 'news' | 'funds';
+type ViewMode =
+  | 'single'
+  | 'compare'
+  | 'sectors'
+  | 'dividends'
+  | 'calendar'
+  | 'alerts'
+  | 'news'
+  | 'funds'
+  | 'portfolio'
+  | 'sip'
+  | 'fund-compare'
+  | 'notifications';
 
 export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -58,6 +77,42 @@ export default function Home() {
     watchlist: watchlist.length > 0 ? watchlist : undefined,
   };
 
+  // Navigation items grouped
+  const navGroups = [
+    {
+      label: 'Stocks',
+      items: [
+        { id: 'single', icon: BarChart3, label: 'Stock' },
+        { id: 'compare', icon: ArrowLeftRight, label: 'Compare' },
+        { id: 'sectors', icon: Grid3X3, label: 'Sectors' },
+        { id: 'dividends', icon: DollarSign, label: 'Dividends' },
+      ],
+    },
+    {
+      label: 'Portfolio',
+      items: [
+        { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
+        { id: 'alerts', icon: Bell, label: 'Alerts' },
+      ],
+    },
+    {
+      label: 'Mutual Funds',
+      items: [
+        { id: 'funds', icon: Wallet, label: 'Explore' },
+        { id: 'fund-compare', icon: Scale, label: 'Compare' },
+        { id: 'sip', icon: Calculator, label: 'SIP Calc' },
+      ],
+    },
+    {
+      label: 'More',
+      items: [
+        { id: 'news', icon: Newspaper, label: 'News' },
+        { id: 'calendar', icon: Calendar, label: 'Calendar' },
+        { id: 'notifications', icon: Settings, label: 'Notify' },
+      ],
+    },
+  ];
+
   return (
     <div className="app">
       <Header />
@@ -65,66 +120,27 @@ export default function Home() {
       <main className="main-content">
         <div className="content-grid">
           <div className="left-panel">
-            {/* View Toggle */}
-            <div className="view-toggle">
-              <button
-                className={`view-toggle-btn ${viewMode === 'single' ? 'active' : ''}`}
-                onClick={() => setViewMode('single')}
-              >
-                <BarChart3 size={16} />
-                Stock
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'compare' ? 'active' : ''}`}
-                onClick={() => setViewMode('compare')}
-              >
-                <ArrowLeftRight size={16} />
-                Compare
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'sectors' ? 'active' : ''}`}
-                onClick={() => setViewMode('sectors')}
-              >
-                <Grid3X3 size={16} />
-                Sectors
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'dividends' ? 'active' : ''}`}
-                onClick={() => setViewMode('dividends')}
-              >
-                <DollarSign size={16} />
-                Dividends
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-                onClick={() => setViewMode('calendar')}
-              >
-                <Calendar size={16} />
-                Calendar
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'alerts' ? 'active' : ''}`}
-                onClick={() => setViewMode('alerts')}
-              >
-                <Bell size={16} />
-                Alerts
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'news' ? 'active' : ''}`}
-                onClick={() => setViewMode('news')}
-              >
-                <Newspaper size={16} />
-                News
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'funds' ? 'active' : ''}`}
-                onClick={() => setViewMode('funds')}
-              >
-                <Wallet size={16} />
-                Funds
-              </button>
+            {/* View Toggle - Enhanced with groups */}
+            <div className="view-toggle-container">
+              {navGroups.map((group, groupIndex) => (
+                <div key={group.label} className="view-toggle-group">
+                  {groupIndex > 0 && <div className="toggle-divider" />}
+                  {group.items.map(item => (
+                    <button
+                      key={item.id}
+                      className={`view-toggle-btn ${viewMode === item.id ? 'active' : ''}`}
+                      onClick={() => setViewMode(item.id as ViewMode)}
+                      title={item.label}
+                    >
+                      <item.icon size={16} />
+                      <span className="toggle-label">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
 
+            {/* View Content */}
             {viewMode === 'single' && (
               <>
                 <SearchBar onSelectStock={setSelectedSymbol} />
@@ -165,6 +181,22 @@ export default function Home() {
 
             {viewMode === 'funds' && (
               <MutualFundsExplorer />
+            )}
+
+            {viewMode === 'portfolio' && (
+              <PortfolioTracker onSelectStock={handleStockSelect} />
+            )}
+
+            {viewMode === 'sip' && (
+              <SIPCalculator />
+            )}
+
+            {viewMode === 'fund-compare' && (
+              <FundComparison />
+            )}
+
+            {viewMode === 'notifications' && (
+              <NotificationSettings />
             )}
           </div>
 
