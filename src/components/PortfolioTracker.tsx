@@ -62,10 +62,11 @@ export default function PortfolioTracker({ onSelectStock }: PortfolioTrackerProp
 
         setSearching(true);
         try {
-            const response = await fetch(`/api/stocks?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`);
             if (response.ok) {
                 const data = await response.json();
-                setSearchResults(data.results?.slice(0, 5) || []);
+                // API returns array directly
+                setSearchResults(Array.isArray(data) ? data.slice(0, 5) : []);
             }
         } catch {
             // Ignore errors
@@ -274,32 +275,34 @@ export default function PortfolioTracker({ onSelectStock }: PortfolioTrackerProp
 
             {view === 'holdings' ? (
                 <>
-                    {/* Search & Sort */}
-                    <div className="portfolio-controls">
-                        <div className="portfolio-search">
-                            <Search size={14} />
-                            <input
-                                type="text"
-                                placeholder="Search holdings..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+                    {/* Search & Sort - Only show when holdings exist */}
+                    {portfolio && portfolio.holdings.length > 0 && (
+                        <div className="portfolio-controls">
+                            <div className="portfolio-search">
+                                <Search size={14} />
+                                <input
+                                    type="text"
+                                    placeholder="Search holdings..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <div className="portfolio-sort">
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                                >
+                                    <option value="value">Value</option>
+                                    <option value="name">Name</option>
+                                    <option value="pnl">P&L</option>
+                                    <option value="pnlPercent">P&L %</option>
+                                </select>
+                                <button onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>
+                                    {sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </button>
+                            </div>
                         </div>
-                        <div className="portfolio-sort">
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                            >
-                                <option value="value">Value</option>
-                                <option value="name">Name</option>
-                                <option value="pnl">P&L</option>
-                                <option value="pnlPercent">P&L %</option>
-                            </select>
-                            <button onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>
-                                {sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                            </button>
-                        </div>
-                    </div>
+                    )}
 
                     {/* Holdings List */}
                     <div className="portfolio-holdings">
@@ -365,28 +368,40 @@ export default function PortfolioTracker({ onSelectStock }: PortfolioTrackerProp
             ) : (
                 /* Sector Allocation View */
                 <div className="portfolio-sectors">
-                    {sectorAllocation.map(sector => (
-                        <div key={sector.sector} className="sector-card">
-                            <div className="sector-header">
-                                <span className="sector-name">{sector.sector}</span>
-                                <span className="sector-percentage">{sector.percentage.toFixed(1)}%</span>
-                            </div>
-                            <div className="sector-bar">
-                                <div
-                                    className="sector-bar-fill"
-                                    style={{ width: `${sector.percentage}%` }}
-                                />
-                            </div>
-                            <div className="sector-value">{formatCurrency(sector.value)}</div>
-                            <div className="sector-holdings">
-                                {sector.holdings.map(h => (
-                                    <span key={h.id} className="sector-holding-tag">
-                                        {h.symbol.replace('.NS', '')}
-                                    </span>
-                                ))}
-                            </div>
+                    {sectorAllocation.length === 0 ? (
+                        <div className="portfolio-empty">
+                            <PieChart size={32} />
+                            <p>No sector data yet</p>
+                            <span className="empty-hint">Add holdings with sector tags to see allocation</span>
+                            <button onClick={() => setShowAddModal(true)}>
+                                <Plus size={14} />
+                                Add your first stock
+                            </button>
                         </div>
-                    ))}
+                    ) : (
+                        sectorAllocation.map(sector => (
+                            <div key={sector.sector} className="sector-card">
+                                <div className="sector-header">
+                                    <span className="sector-name">{sector.sector}</span>
+                                    <span className="sector-percentage">{sector.percentage.toFixed(1)}%</span>
+                                </div>
+                                <div className="sector-bar">
+                                    <div
+                                        className="sector-bar-fill"
+                                        style={{ width: `${sector.percentage}%` }}
+                                    />
+                                </div>
+                                <div className="sector-value">{formatCurrency(sector.value)}</div>
+                                <div className="sector-holdings">
+                                    {sector.holdings.map(h => (
+                                        <span key={h.id} className="sector-holding-tag">
+                                            {h.symbol.replace('.NS', '')}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
 
@@ -402,41 +417,39 @@ export default function PortfolioTracker({ onSelectStock }: PortfolioTrackerProp
                         </div>
                         <div className="modal-body">
                             <div className="form-group">
-                                <label>Stock Symbol</label>
+                                <label>Search Stock</label>
                                 <div className="search-input-wrapper">
                                     <input
                                         type="text"
-                                        placeholder="Search for a stock..."
+                                        placeholder="Search by symbol or company name..."
                                         value={newHolding.symbol}
                                         onChange={(e) => {
-                                            setNewHolding(prev => ({ ...prev, symbol: e.target.value }));
+                                            setNewHolding(prev => ({ ...prev, symbol: e.target.value, name: '' }));
                                             searchStocks(e.target.value);
                                         }}
                                     />
                                     {searching && <Loader2 size={14} className="spin" />}
+                                    {searchResults.length > 0 && (
+                                        <div className="search-dropdown">
+                                            {searchResults.map(result => (
+                                                <button
+                                                    key={result.symbol}
+                                                    type="button"
+                                                    onClick={() => handleSelectSearchResult(result)}
+                                                >
+                                                    <strong>{result.symbol}</strong>
+                                                    <span>{result.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                {searchResults.length > 0 && (
-                                    <div className="search-dropdown">
-                                        {searchResults.map(result => (
-                                            <button
-                                                key={result.symbol}
-                                                onClick={() => handleSelectSearchResult(result)}
-                                            >
-                                                <strong>{result.symbol}</strong>
-                                                <span>{result.name}</span>
-                                            </button>
-                                        ))}
+                                {newHolding.name && (
+                                    <div className="selected-stock-info">
+                                        <span className="selected-label">Selected:</span>
+                                        <span className="selected-name">{newHolding.name}</span>
                                     </div>
                                 )}
-                            </div>
-                            <div className="form-group">
-                                <label>Company Name</label>
-                                <input
-                                    type="text"
-                                    placeholder="Company name"
-                                    value={newHolding.name}
-                                    onChange={(e) => setNewHolding(prev => ({ ...prev, name: e.target.value }))}
-                                />
                             </div>
                             <div className="form-row">
                                 <div className="form-group">

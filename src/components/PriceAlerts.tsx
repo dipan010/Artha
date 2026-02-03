@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, Plus, Trash2, Pause, Play, X, Settings, History, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
+import { Bell, Plus, Trash2, Pause, Play, X, Settings, History, Volume2, VolumeX, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAlerts } from '@/hooks/useAlerts';
 import type { AlertType, PriceAlert } from '@/types/alerts';
 import { ALERT_TYPE_LABELS, ALERT_TYPE_ICONS } from '@/types/alerts';
@@ -40,6 +40,10 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
         notes: '',
     });
 
+    // Search state
+    const [searchResults, setSearchResults] = useState<Array<{ symbol: string; name: string }>>([]);
+    const [searching, setSearching] = useState(false);
+
     // Pre-fill with selected symbol
     useEffect(() => {
         if (selectedSymbol) {
@@ -50,6 +54,37 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
             }));
         }
     }, [selectedSymbol]);
+
+    // Search for stocks
+    const searchStocks = async (query: string) => {
+        if (query.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setSearching(true);
+        try {
+            const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const data = await response.json();
+                setSearchResults(Array.isArray(data) ? data.slice(0, 5) : []);
+            }
+        } catch {
+            // Ignore errors
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    // Handle stock selection from search
+    const handleSelectSearchResult = (result: { symbol: string; name: string }) => {
+        setNewAlert(prev => ({
+            ...prev,
+            symbol: result.symbol,
+            stockName: result.name,
+        }));
+        setSearchResults([]);
+    };
 
     const handleCreateAlert = () => {
         if (!newAlert.symbol || !newAlert.targetValue) return;
@@ -183,28 +218,54 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
 
             {/* Create Alert Modal */}
             {showCreateModal && (
-                <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-                    <div className="modal-content alerts-modal" onClick={e => e.stopPropagation()}>
+                <div className="portfolio-modal-overlay" onClick={() => setShowCreateModal(false)}>
+                    <div className="portfolio-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>Create Price Alert</h3>
-                            <button className="modal-close" onClick={() => setShowCreateModal(false)}>
-                                <X size={20} />
+                            <button onClick={() => setShowCreateModal(false)}>
+                                <X size={18} />
                             </button>
                         </div>
 
                         <div className="modal-body">
                             <div className="form-group">
-                                <label>Stock Symbol</label>
-                                <input
-                                    type="text"
-                                    value={newAlert.symbol}
-                                    onChange={e => setNewAlert(prev => ({
-                                        ...prev,
-                                        symbol: e.target.value.toUpperCase(),
-                                        stockName: e.target.value.replace('.NS', '').replace('.BO', '').toUpperCase()
-                                    }))}
-                                    placeholder="e.g., RELIANCE.NS"
-                                />
+                                <label>Search Stock</label>
+                                <div className="search-input-wrapper">
+                                    <input
+                                        type="text"
+                                        value={newAlert.symbol}
+                                        onChange={e => {
+                                            setNewAlert(prev => ({
+                                                ...prev,
+                                                symbol: e.target.value.toUpperCase(),
+                                                stockName: ''
+                                            }));
+                                            searchStocks(e.target.value);
+                                        }}
+                                        placeholder="Search by symbol or company name..."
+                                    />
+                                    {searching && <Loader2 size={14} className="spin" />}
+                                    {searchResults.length > 0 && (
+                                        <div className="search-dropdown">
+                                            {searchResults.map(result => (
+                                                <button
+                                                    key={result.symbol}
+                                                    type="button"
+                                                    onClick={() => handleSelectSearchResult(result)}
+                                                >
+                                                    <strong>{result.symbol}</strong>
+                                                    <span>{result.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {newAlert.stockName && (
+                                    <div className="selected-stock-info">
+                                        <span className="selected-label">Selected:</span>
+                                        <span className="selected-name">{newAlert.stockName}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-group">
@@ -213,6 +274,7 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
                                     {(Object.keys(ALERT_TYPE_LABELS) as AlertType[]).map(type => (
                                         <button
                                             key={type}
+                                            type="button"
                                             className={`alert-type-btn ${newAlert.type === type ? 'active' : ''}`}
                                             onClick={() => setNewAlert(prev => ({ ...prev, type }))}
                                         >
@@ -248,7 +310,7 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
                             </div>
 
                             <div className="form-group checkbox-group">
-                                <label>
+                                <label className="checkbox-label">
                                     <input
                                         type="checkbox"
                                         checked={newAlert.notifySound}
@@ -260,14 +322,15 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
                         </div>
 
                         <div className="modal-footer">
-                            <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
+                            <button className="modal-cancel" onClick={() => setShowCreateModal(false)}>
                                 Cancel
                             </button>
                             <button
-                                className="btn-primary"
+                                className="modal-submit"
                                 onClick={handleCreateAlert}
                                 disabled={!newAlert.symbol || !newAlert.targetValue}
                             >
+                                <Plus size={14} />
                                 Create Alert
                             </button>
                         </div>
