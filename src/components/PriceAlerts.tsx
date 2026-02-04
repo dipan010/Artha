@@ -310,12 +310,15 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
                             </div>
 
                             <div className="form-group checkbox-group">
-                                <label className="checkbox-label">
+                                <label className="toggle-switch">
                                     <input
                                         type="checkbox"
                                         checked={newAlert.notifySound}
                                         onChange={e => setNewAlert(prev => ({ ...prev, notifySound: e.target.checked }))}
                                     />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                                <label onClick={() => setNewAlert(prev => ({ ...prev, notifySound: !prev.notifySound }))}>
                                     Play notification sound
                                 </label>
                             </div>
@@ -351,18 +354,21 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
 
                         <div className="modal-body">
                             <div className="form-group checkbox-group">
-                                <label>
+                                <label className="toggle-switch">
                                     <input
                                         type="checkbox"
                                         checked={settings.soundEnabled}
                                         onChange={e => updateSettings({ soundEnabled: e.target.checked })}
                                     />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                                <label onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}>
                                     Enable notification sounds
                                 </label>
                             </div>
 
                             <div className="form-group checkbox-group">
-                                <label>
+                                <label className="toggle-switch">
                                     <input
                                         type="checkbox"
                                         checked={settings.browserNotifications}
@@ -375,6 +381,9 @@ export default function PriceAlerts({ selectedSymbol, onSelectStock }: PriceAler
                                             }
                                         }}
                                     />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                                <label onClick={() => !settings.browserNotifications && requestPermission().then(granted => updateSettings({ browserNotifications: granted }))}>
                                     Enable browser notifications
                                 </label>
                             </div>

@@ -71,8 +71,23 @@ function decodeHTMLEntities(text: string): string {
 }
 
 function cleanDescription(desc: string): string {
-    // Remove HTML tags and decode entities
-    return decodeHTMLEntities(desc.replace(/<[^>]*>/g, '').substring(0, 300));
+    // First, decode HTML entities to convert &lt;a to <a etc.
+    let decoded = desc
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, ' ');
+
+    // Now strip HTML tags from the decoded content
+    let cleaned = decoded
+        .replace(/<a[^>]*>.*?<\/a>/gi, '') // Remove anchor tags and their contents
+        .replace(/<[^>]+>/g, '') // Remove any remaining HTML tags
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+
+    return cleaned.substring(0, 300);
 }
 
 async function fetchRSSFeed(url: string, category: NewsArticle['category']): Promise<NewsArticle[]> {

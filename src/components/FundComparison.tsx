@@ -272,6 +272,8 @@ export default function FundComparison({ initialFunds = [], onClose }: FundCompa
                         key={i}
                         size={14}
                         className={i <= rating ? 'filled' : 'empty'}
+                        fill={i <= rating ? '#f59e0b' : 'none'}
+                        strokeWidth={i <= rating ? 0 : 1.5}
                     />
                 ))}
             </div>
@@ -458,8 +460,8 @@ export default function FundComparison({ initialFunds = [], onClose }: FundCompa
                                                 <div
                                                     key={fund.id}
                                                     className={`table-cell value ${isBest ? 'best' : ''} ${metric.format === 'percent' && typeof value === 'number'
-                                                            ? value >= 0 ? 'positive' : 'negative'
-                                                            : ''
+                                                        ? value >= 0 ? 'positive' : 'negative'
+                                                        : ''
                                                         }`}
                                                 >
                                                     {metric.format === 'stars'

@@ -16,6 +16,11 @@ const AUTO_REFRESH_INTERVALS = [
     { value: 600, label: '10 min' },
 ];
 
+// Utility to strip HTML tags from text
+const stripHtml = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+};
+
 export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [loading, setLoading] = useState(true);
@@ -321,7 +326,7 @@ export default function NewsPanel({ selectedSymbol }: NewsPanelProps) {
                             </div>
 
                             <h3 className="news-card-title">{article.title}</h3>
-                            <p className="news-card-desc">{article.description}</p>
+                            <p className="news-card-desc">{stripHtml(article.description || '')}</p>
 
                             {article.relatedSymbols && article.relatedSymbols.length > 0 && (
                                 <div className="news-symbols">

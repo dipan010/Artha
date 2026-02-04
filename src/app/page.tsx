@@ -99,7 +99,7 @@ export default function Home() {
       label: 'Mutual Funds',
       items: [
         { id: 'funds', icon: Wallet, label: 'Explore' },
-        { id: 'fund-compare', icon: Scale, label: 'Compare' },
+        { id: 'fund-compare', icon: Scale, label: 'Fund Comp' },
         { id: 'sip', icon: Calculator, label: 'SIP Calc' },
       ],
     },

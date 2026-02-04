@@ -56,7 +56,9 @@ export default function MutualFundsExplorer() {
                     <Star
                         key={i}
                         size={14}
-                        className={i <= rating ? 'filled' : ''}
+                        className={i <= rating ? 'filled' : 'empty'}
+                        fill={i <= rating ? '#f59e0b' : 'none'}
+                        strokeWidth={i <= rating ? 0 : 1.5}
                     />
                 ))}
             </div>
